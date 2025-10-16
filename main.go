@@ -51,32 +51,10 @@ func lines(path string) {
 	}
 	//fmt.Println("Current working directory:", dir)
 
-	includePattern := regexp.MustCompile(`{{include:(.+)}}`)
-
-	var result []string
-
-	for _, line := range lines {
-		matches := includePattern.FindStringSubmatch(line)
-		if len(matches) == 2 {
-			includePath := matches[1]
-			absPath := filepath.Join(filepath.Join(dir, "templates"), includePath)
-			//fmt.Println("Include path:", includePath, "->", absPath)
-			if !isWithinRoot(dir, absPath) {
-				fmt.Println("Error: Attempted directory traversal in include path:", includePath)
-				continue
-			}
-			content, err := os.ReadFile(absPath)
-			if err != nil {
-				fmt.Println("Error reading included file:", err)
-				result = append(result, line) // fallback: keep original line
-			} else {
-				fmt.Println("Included file:", absPath)
-				//fmt.Println("Replacing line:", line, "with content of length", len(content))
-				result = append(result, string(content))
-			}
-		} else {
-			result = append(result, line)
-		}
+	result, err := processLines(lines, dir, filepath.Dir(path))
+	if err != nil {
+		fmt.Println("Error processing lines:", err)
+		return
 	}
 
 	writeLines(result, "./public", filepath.Base(path))
@@ -106,42 +84,44 @@ func startsWithDotDot(rel string) bool {
 	return rel == ".." || filepath.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
-func main11234() {
-	mainFile := "pages/about.html"
+// Recursively process lines for template inclusion
+func processLines(lines []string, root string, currentDir string) ([]string, error) {
 	includePattern := regexp.MustCompile(`{{include:(.+)}}`)
-
-	file, err := os.Open(mainFile)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	defer file.Close()
-
 	var result []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range lines {
 		matches := includePattern.FindStringSubmatch(line)
 		if len(matches) == 2 {
 			includePath := matches[1]
-			absPath := filepath.Join(filepath.Dir(mainFile), includePath)
-			content, err := os.ReadFile(absPath)
-			if err != nil {
-				fmt.Println("Error reading included file:", err)
-				result = append(result, line) // fallback: keep original line
-			} else {
-				result = append(result, string(content))
+			absPath := filepath.Join(root, "templates", includePath)
+			if !isWithinRoot(root, absPath) {
+				result = append(result, fmt.Sprintf("<!-- Error: Attempted directory traversal in include path: %s -->", includePath))
+				continue
 			}
+			file, err := os.Open(absPath)
+			if err != nil {
+				result = append(result, fmt.Sprintf("<!-- Error reading included file: %s -->", includePath))
+				continue
+			}
+			var includedLines []string
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				includedLines = append(includedLines, scanner.Text())
+			}
+			file.Close()
+			if err := scanner.Err(); err != nil {
+				result = append(result, fmt.Sprintf("<!-- Error reading included file: %s -->", includePath))
+				continue
+			}
+			// Recursively process included lines
+			recursed, err := processLines(includedLines, root, filepath.Dir(absPath))
+			if err != nil {
+				result = append(result, fmt.Sprintf("<!-- Error processing included file: %s -->", includePath))
+				continue
+			}
+			result = append(result, recursed...)
 		} else {
 			result = append(result, line)
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
-	}
-
-	// Example: print the result
-	for _, line := range result {
-		fmt.Println(line)
-	}
+	return result, nil
 }
