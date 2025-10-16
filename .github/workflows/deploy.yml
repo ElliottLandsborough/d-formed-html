@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - deploy # Changes in 'deploy' branch will be published to GitHub Pages
+      - main # Changes in 'main' branch will be published to GitHub Pages
 
 jobs:
   build-deploy:
