@@ -20,18 +20,44 @@ $(window).on('load', function() {
     greeting = 'Good evening!';
   }
   $('h1#greeting').html(greeting);
+
+    $(function() {
+        var bgImages = [
+            'bg.jpg', 'bg2.jpg', 'bg3.jpg', 'bg4.jpg', 'bg5.jpg', 'bg6.jpg', 'bg7.jpg'
+        ];
+        var i = Math.floor(Math.random() * bgImages.length);
+        var selectedBg = bgImages[i];
+
+        $('body').css({
+            'background': "url('img/" + selectedBg + "') no-repeat",
+            'background-color': '#111111',
+            'background-position': 'center top',
+            'background-attachment': 'fixed'
+        });
+    });
+
+    (function() {
+        var $contactDiv = $("#contact");
+        if ($contactDiv.length) {
+            // Obfuscated parts
+            const a = 'hello';
+            const b = 'd-formed';
+            const c = 'net';
+            const d = '@';
+            const e = '.';
+            
+            // Construct email
+            const email = a + d + b + e + c;
+            
+            // Create and insert link
+            const link = document.createElement('a');
+            link.href = 'mai' + 'lto:' + email;
+            link.textContent = email;
+            
+            // Add to page after small delay
+            setTimeout(function() {
+                document.getElementById('contact').appendChild(link);
+            }, 100);
+        }
+    })();
 });
-
-
-
-
-// must be at bottom - analytics code
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-4886492-1']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
