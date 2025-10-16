@@ -95,7 +95,7 @@ func extractMeta(lines []string, includeIdx int) (title, desc, keywords string, 
 		}
 	}
 	if title == "" || desc == "" || keywords == "" {
-		return "", "", "", fmt.Errorf("Missing meta tag(s) before header include")
+		return "", "", "", fmt.Errorf("missing meta tag(s) before header include")
 	}
 	return title, desc, keywords, nil
 }
@@ -104,12 +104,16 @@ func extractMeta(lines []string, includeIdx int) (title, desc, keywords string, 
 func replaceHeaderMeta(headerContent, title, desc, keywords string) (string, error) {
 	if !strings.Contains(headerContent, "<title>") ||
 		!strings.Contains(headerContent, "name=\"description\"") ||
-		!strings.Contains(headerContent, "name=\"keywords\"") {
-		return "", fmt.Errorf("Header missing required meta tags")
+		!strings.Contains(headerContent, "name=\"keywords\"") ||
+		!strings.Contains(headerContent, "name=\"og:title\"") ||
+		!strings.Contains(headerContent, "name=\"og:description\"") {
+		return "", fmt.Errorf("header missing required meta tags")
 	}
 	headerContent = regexp.MustCompile(`<title>.*?</title>`).ReplaceAllString(headerContent, "<title>"+title+"</title>")
 	headerContent = regexp.MustCompile(`<meta name=\"description\" content=\".*?\" ?/?>`).ReplaceAllString(headerContent, `<meta name="description" content="`+desc+`" />`)
 	headerContent = regexp.MustCompile(`<meta name=\"keywords\" content=\".*?\" ?/?>`).ReplaceAllString(headerContent, `<meta name="keywords" content="`+keywords+`" />`)
+	headerContent = regexp.MustCompile(`<meta name=\"og:title\" content=\".*?\" ?/?>`).ReplaceAllString(headerContent, `<meta name="og:title" content="`+title+`" />`)
+	headerContent = regexp.MustCompile(`<meta name=\"og:description\" content=\".*?\" ?/?>`).ReplaceAllString(headerContent, `<meta name="og:description" content="`+desc+`" />`)
 	return headerContent, nil
 }
 
@@ -142,8 +146,18 @@ func processLines(lines []string, root string, currentDir string) ([]string, err
 					result = append(result, fmt.Sprintf("<!-- Error extracting meta tags for header include: %s -->", err.Error()))
 					continue
 				}
-				// todo: do something with these items.
-				fmt.Println("Extracted meta - Title:", title, "Description:", desc, "Keywords:", keywords)
+				headerContentBytes, err := os.ReadFile(absPath)
+				if err != nil {
+					result = append(result, fmt.Sprintf("<!-- Error reading included file: %s -->", includePath))
+					continue
+				}
+				headerContent, err := replaceHeaderMeta(string(headerContentBytes), title, desc, keywords)
+				if err != nil {
+					result = append(result, fmt.Sprintf("<!-- Error replacing meta tags in header: %s -->", err.Error()))
+					continue
+				}
+				result = append(result, headerContent)
+				continue
 			}
 
 			file, err := os.Open(absPath)
@@ -168,6 +182,11 @@ func processLines(lines []string, root string, currentDir string) ([]string, err
 				continue
 			}
 			result = append(result, recursed...)
+		} else if strings.HasPrefix(line, "{{title:") ||
+			strings.HasPrefix(line, "{{description:") ||
+			strings.HasPrefix(line, "{{keywords:") {
+			// Skip meta lines
+			continue
 		} else {
 			result = append(result, line)
 		}
