@@ -1,0 +1,14 @@
+/* TEAM */
+  Backend Developer & Server Administrator: Elliott Landsborough
+  Site: https://github.com/ElliottLandsborough
+  Twitter: http://twitter.com/#!/d_formed
+  Location: London, UK
+
+  Frontend Developer & Designer: Emil Smith
+  Site: http://emilsmith.pro/
+  Twitter: http://twitter.com/#!/d_formed
+  Location: London, UK
+
+/* SITE */
+  Standards: HTML5, CSS3
+  Software: VScode, Photoshop
