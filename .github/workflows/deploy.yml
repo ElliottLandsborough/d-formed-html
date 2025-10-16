@@ -2,15 +2,14 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main # Changes in 'main' branch will be published to GitHub Pages
+    branches: [main]
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Go
@@ -20,12 +19,13 @@ jobs:
 
       - name: Build site
         run: |
-          make tidy
-          make run
-          # Ensure static files are in 'public'
+          make
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: public
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+        id: deployment
+        uses: actions/deploy-pages@v3
