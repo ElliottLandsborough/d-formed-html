@@ -1,0 +1,43 @@
+# Go build and cache files
+/bin/
+/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Dependency directories
+/vendor/
+
+# Generated files
+*.log
+*.tmp
+*.swp
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node/npm
+node_modules/
+
+# public folder if used for deployment
+/public/
+
+# Ignore assets if generated
+# /assets/
+
+# Misc
+*.bak
+*.old
+
+# Ignore by pattern
+*~
